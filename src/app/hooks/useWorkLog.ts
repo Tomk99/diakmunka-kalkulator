@@ -4,7 +4,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { z } from "zod";
 
-// Adatstruktúrák definiálása Zod sémákkal
 export const settingsSchema = z.object({
   hourlyRate: z.number().min(0),
   sundayBonusRate: z.number().min(0),
@@ -23,54 +22,53 @@ export const workEntrySchema = z.object({
 export type Settings = z.infer<typeof settingsSchema>;
 export type WorkEntry = z.infer<typeof workEntrySchema>;
 
-const isBrowser = typeof window !== "undefined";
+const defaultSettings: Settings = {
+  hourlyRate: 1800,
+  sundayBonusRate: 900,
+  nightBonusRate: 540,
+};
 
 export function useWorkLog() {
-  // Beállítások kezelése
-  const [settings, setSettings] = useState<Settings>(() => {
-    if (!isBrowser)
-      return { hourlyRate: 1800, sundayBonusRate: 900, nightBonusRate: 540 };
-    const savedSettings = localStorage.getItem("workSettings");
-    return savedSettings
-      ? settingsSchema.parse(JSON.parse(savedSettings))
-      : { hourlyRate: 1800, sundayBonusRate: 900, nightBonusRate: 540 };
-  });
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
+  const [entries, setEntries] = useState<WorkEntry[]>([]);
 
-  // Munkanapok bejegyzéseinek kezelése
-  const [entries, setEntries] = useState<WorkEntry[]>(() => {
-    if (!isBrowser) return [];
-    const savedEntries = localStorage.getItem("workEntries");
-    return savedEntries
-      ? z.array(workEntrySchema).parse(JSON.parse(savedEntries))
-      : [];
-  });
-
-  // Beállítások mentése localStorage-be, ha változnak
   useEffect(() => {
-    if (isBrowser) {
-      localStorage.setItem("workSettings", JSON.stringify(settings));
+    try {
+      const savedSettings = localStorage.getItem("workSettings");
+      if (savedSettings) {
+        setSettings(settingsSchema.parse(JSON.parse(savedSettings)));
+      }
+    } catch (error) {
+      console.error("Hiba a beállítások betöltésekor:", error);
     }
+
+    try {
+      const savedEntries = localStorage.getItem("workEntries");
+      if (savedEntries) {
+        setEntries(z.array(workEntrySchema).parse(JSON.parse(savedEntries)));
+      }
+    } catch (error) {
+      console.error("Hiba a bejegyzések betöltésekor:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("workSettings", JSON.stringify(settings));
   }, [settings]);
 
-  // Bejegyzések mentése localStorage-be, ha változnak
   useEffect(() => {
-    if (isBrowser) {
-      localStorage.setItem("workEntries", JSON.stringify(entries));
-    }
+    localStorage.setItem("workEntries", JSON.stringify(entries));
   }, [entries]);
 
-  // Új bejegyzés hozzáadása
   const addEntry = (entry: Omit<WorkEntry, "id">) => {
     const newEntry = { ...entry, id: new Date().toISOString() };
     setEntries((prev) => [...prev, newEntry]);
   };
 
-  // Bejegyzés törlése
   const deleteEntry = (id: string) => {
     setEntries((prev) => prev.filter((entry) => entry.id !== id));
   };
 
-  // Napi fizetés kiszámítása
   const calculateDailyPay = (entry: WorkEntry) => {
     const basePay = entry.hoursWorked * settings.hourlyRate;
     const sundayBonus = entry.isSunday
@@ -81,7 +79,6 @@ export function useWorkLog() {
     return totalPay;
   };
 
-  // Összesített adatok kiszámítása useMemo-val a hatékonyságért
   const summary = useMemo(() => {
     const totalHours = entries.reduce(
       (sum, entry) => sum + entry.hoursWorked,

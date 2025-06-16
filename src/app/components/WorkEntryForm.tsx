@@ -19,9 +19,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WorkEntry } from "@/app/hooks/useWorkLog";
 import { toast } from "sonner";
 
-// --- JAVÍTÁS ITT KEZDŐDIK ---
-// Eltávolítottuk a .default() hívásokat a sémából,
-// hogy a típusok egyértelműek legyenek a resolver számára.
 const formSchema = z.object({
   date: z.string().min(1, { message: "A dátum megadása kötelező." }),
   hoursWorked: z.coerce
@@ -31,7 +28,6 @@ const formSchema = z.object({
   nightHours: z.coerce.number().min(0),
   cashDeficit: z.coerce.number().min(0),
 });
-// --- JAVÍTÁS ITT ÉR VÉGET ---
 
 interface WorkEntryFormProps {
   addEntry: (entry: Omit<WorkEntry, "id">) => void;

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { WorkEntry } from "@/app/hooks/useWorkLog"; // <-- JAVÍTVA
+import { WorkEntry } from "@/app/hooks/useWorkLog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface WorkLogTableProps {

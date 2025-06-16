@@ -6,6 +6,7 @@ import { WorkLogTable } from "@/app/components/WorkLogTable";
 import { useWorkLog } from "@/app/hooks/useWorkLog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SettingsDialog } from "@/app/components/SettingsDialog";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function Home() {
   const {
@@ -30,12 +31,14 @@ export default function Home() {
     <main className="container mx-auto p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Diákmunka Kalkulátor</h1>
-        <SettingsDialog settings={settings} onSave={setSettings} />
+        <div className="flex items-center gap-2">
+          <SettingsDialog settings={settings} onSave={setSettings} />
+          <ThemeToggle />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          {/* A komponens neve itt lett javítva: */}
           <WorkLogTable
             entries={entries}
             calculateDailyPay={calculateDailyPay}
