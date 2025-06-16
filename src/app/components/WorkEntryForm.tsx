@@ -14,7 +14,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { WorkEntry } from "@/app/hooks/useWorkLog";
 import { toast } from "sonner";
@@ -24,7 +23,6 @@ const formSchema = z.object({
   hoursWorked: z.coerce
     .number()
     .min(0.1, { message: "Legalább 0.1 órát adj meg." }),
-  isSunday: z.boolean(),
   nightHours: z.coerce.number().min(0),
   cashDeficit: z.coerce.number().min(0),
 });
@@ -39,16 +37,25 @@ export function WorkEntryForm({ addEntry }: WorkEntryFormProps) {
     defaultValues: {
       date: new Date().toISOString().split("T")[0],
       hoursWorked: 8,
-      isSunday: false,
       nightHours: 0,
       cashDeficit: 0,
     },
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    addEntry(values);
+    const isSunday = new Date(values.date + "T12:00:00").getDay() === 0;
+
+    const entryToSave = {
+      ...values,
+      isSunday: isSunday,
+    };
+
+    addEntry(entryToSave);
+
     toast.success("Sikeres mentés!", {
-      description: `A(z) ${values.date} napi bejegyzés hozzáadva.`,
+      description: `A(z) ${values.date} napi bejegyzés hozzáadva. ${
+        isSunday ? "Ez egy vasárnap volt!" : ""
+      }`,
     });
     form.reset({
       ...form.getValues(),
@@ -118,23 +125,7 @@ export function WorkEntryForm({ addEntry }: WorkEntryFormProps) {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="isSunday"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Ez a nap vasárnapra esett?</FormLabel>
-                  </div>
-                </FormItem>
-              )}
-            />
+
             <Button type="submit">Bejegyzés mentése</Button>
           </form>
         </Form>
